@@ -1,0 +1,31 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Personal viewing records - not for a public repo
+Certificate of Attendance/
+ISC2 video history/
+brighttalk-transcript-*.txt
+
+# Downloaded audio (only present if --keep-audio was used)
+*.wav
+
+# Browser HAR captures - can contain session cookies/auth tokens
+*.har
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment/secrets
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
