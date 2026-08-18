@@ -12,3 +12,8 @@ dependencies = [
     "requests>=2.34.2",
     "yt-dlp>=2026.7.4",
 ]
+
+[dependency-groups]
+dev = [
+    "pylint>=4.0.7",
+]

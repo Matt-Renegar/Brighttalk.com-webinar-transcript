@@ -82,7 +82,10 @@ def fetch_title(session: requests.Session, channel_id: str, webcast_id: str) -> 
         TranscriptError: If the webcast doesn't exist (404).
         requests.HTTPError: For other non-2xx responses.
     """
-    url = f"{BASE_URL}/service/communication/v1/channel/{channel_id}/communication/{webcast_id}/public"
+    url = (
+        f"{BASE_URL}/service/communication/v1/channel/{channel_id}"
+        f"/communication/{webcast_id}/public"
+    )
     resp = session.get(url, timeout=15)
     if resp.status_code == 404:
         raise TranscriptError(f"Webcast {channel_id}/{webcast_id} not found.")
@@ -116,7 +119,7 @@ def pick_audio_variant_url(
     """
     master_url = f"{CDN_HOST}/{channel_id}-{webcast_id}/index.m3u8"
     resp = session.get(master_url, timeout=15)
-    if resp.status_code == 403 or resp.status_code == 404:
+    if resp.status_code in (403, 404):
         raise TranscriptError(
             f"Could not read the video manifest at {master_url} ({resp.status_code}). "
             "This channel may host video on a different CDN than the one this script "
@@ -203,7 +206,7 @@ def download_audio(ffmpeg_path: str, stream_url: str, out_wav_path: str) -> None
         "pcm_s16le",
         out_wav_path,
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if result.returncode != 0:
         raise TranscriptError(
             f"ffmpeg failed to download/convert audio:\n{result.stderr}"
@@ -224,7 +227,7 @@ def transcribe(wav_path: str, model_size: str) -> str:
     Returns:
         The full transcript text, or an empty string if no speech was detected.
     """
-    from faster_whisper import WhisperModel
+    from faster_whisper import WhisperModel  # pylint: disable=import-outside-toplevel
 
     model = WhisperModel(model_size, device="cpu", compute_type="int8")
     segments, _info = model.transcribe(wav_path, vad_filter=True)
@@ -253,7 +256,7 @@ def slugify(title: str) -> str:
     return slug or "webcast"
 
 
-def main(argv: list[str] | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:  # pylint: disable=too-many-locals
     """Run the CLI: parse args, download and transcribe a webcast, and write the transcript.
 
     Orchestrates the full pipeline: locate ffmpeg, resolve the webcast's
@@ -278,7 +281,10 @@ def main(argv: list[str] | None = None) -> int:
         "--model",
         default="small",
         choices=["tiny", "base", "small", "medium", "large-v3"],
-        help="faster-whisper model size (default: small). Larger = more accurate, much slower on CPU.",
+        help=(
+            "faster-whisper model size (default: small). "
+            "Larger = more accurate, much slower on CPU."
+        ),
     )
     parser.add_argument(
         "--out", default=".", help="Output directory (default: current directory)."
